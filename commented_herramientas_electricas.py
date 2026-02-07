@@ -16,7 +16,7 @@ def resource_path(relative_path):
 
 #print(resource_path('color_after_name.db'))
 class Herramientas:
-    #db_name = resource_path('color_after_name.db')
+    #db_name = resource_path('don't_use_color_after_name.db')
     db_name = 'herramientas_electricas.db'
 
 
@@ -41,11 +41,7 @@ class Herramientas:
         self.nombre.focus()
         self.nombre.grid(row = 1, column = 1)
 
-        #Color Input
-        Label(frame, text = 'Color: ').grid(row = 2, column = 0)
-        self.color = Entry(frame)
-        self.color.grid(row = 2, column = 1)
-
+        
         #Marca Input
         Label(frame, text = 'Marca: ').grid(row = 3, column = 0)
         self.marca = Entry(frame)
@@ -96,7 +92,7 @@ class Herramientas:
         tabla_frame.grid_columnconfigure(0, weight = 1)
         
         #Treeview
-        self.tree = ttk.Treeview(tabla_frame, height = 30, columns = ("col1", "col2", "col3", "col4", "col5", "col6"))
+        self.tree = ttk.Treeview(tabla_frame, height = 30, columns = ("col1", "col2", "col3", "col4", "col5"))
         self.tree.grid(row = 0, column = 0, sticky = "nsew")
 
         #Scroll vertical
@@ -112,12 +108,11 @@ class Herramientas:
 
         #Headings
         self.tree.heading('#0', text = 'nombre', anchor = W)
-        self.tree.heading('col1', text = 'color', anchor = W)
-        self.tree.heading('col2', text = 'marca', anchor = W)
-        self.tree.heading('col3', text = 'modelo', anchor = W)
-        self.tree.heading('col4', text = 'n_de_serie', anchor = W)
-        self.tree.heading('col5', text = 'fecha_de_compra', anchor = W)
-        self.tree.heading('col6', text = 'ubicación', anchor = W)
+        self.tree.heading('col1', text = 'marca', anchor = W)
+        self.tree.heading('col2', text = 'modelo', anchor = W)
+        self.tree.heading('col3', text = 'n_de_serie', anchor = W)
+        self.tree.heading('col4', text = 'fecha_de_compra', anchor = W)
+        self.tree.heading('col5', text = 'ubicación', anchor = W)
         
         #Ajustar ancho de columnas para que no se desborden
         self.tree.column('#0', width = 150, stretch=False)
@@ -126,10 +121,9 @@ class Herramientas:
         self.tree.column('col3', width = 120, stretch=False)
         self.tree.column('col4', width = 150, stretch=False)
         self.tree.column('col5', width = 120, stretch=False)
-        self.tree.column('col6', width = 120, stretch=False)
 
-
-
+        # Evento doble clic en fila
+        self.tree.bind("<Double-1>", self.on_double_click)
 
         #Botones de EDITAR Y BORRAR registros
         botones_frame = Frame(self.wind)
@@ -171,18 +165,17 @@ class Herramientas:
         self.total_label.config(text = "Total de herramientas: " + str(total))
 
     def validation(self):
-        return (len(self.nombre.get()) != 0 and len(self.color.get()) != 0 and len(self.marca.get()) != 0 and len(self.modelo.get()) !=0 and len(self.ndeserie.get()) != 0 and len(self.fechadecompra.get()) != 0 and len(self.ubicación.get()) != 0) 
+        return (len(self.nombre.get()) != 0 and len(self.marca.get()) != 0 and len(self.modelo.get()) !=0 and len(self.ndeserie.get()) != 0 and len(self.fechadecompra.get()) != 0 and len(self.ubicación.get()) != 0) 
 
     def agregar_herramientas_electricas(self):
         if self.validation():
-            query = 'INSERT INTO herramientas_electricas VALUES(NULL, ?, ?, ?, ?, ?, ?, ?)'
-            parameters = (self.nombre.get(), self.color.get(), self.marca.get(), self.modelo.get(), self.ndeserie.get(), self.fechadecompra.get(), self.ubicación.get())
+            query = 'INSERT INTO herramientas_electricas VALUES(NULL, ?, ?, ?, ?, ?, ?)'
+            parameters = (self.nombre.get(), self.marca.get(), self.modelo.get(), self.ndeserie.get(), self.fechadecompra.get(), self.ubicación.get())
             self.run_query(query, parameters)
             self.message['text'] = '✅¡HERRAMIENTA ELÉCTRICA << {} >> AGREGADA EXITOSAMENTE, MI REY! 👍'.format(self.nombre.get())
             self.message['fg'] = 'green'
             self.message['font'] = self.bold_font
             self.nombre.delete(0, END)
-            self.color.delete(0, END)
             self.marca.delete(0, END)
             self.modelo.delete(0, END)
             self.ndeserie.delete(0, END)
@@ -249,12 +242,11 @@ class Herramientas:
             return
         id_registro = self.tree.selection()[0]       
         nombre = self.tree.item(self.tree.selection())['text']
-        color = self.tree.item(self.tree.selection())['values'][0]
-        marca = self.tree.item(self.tree.selection())['values'][1]
-        modelo = self.tree.item(self.tree.selection())['values'][2]
-        n_de_serie = self.tree.item(self.tree.selection())['values'][3]
-        fecha_de_compra = self.tree.item(self.tree.selection())['values'][4]
-        ubicación = self.tree.item(self.tree.selection())['values'][5]
+        marca = self.tree.item(self.tree.selection())['values'][0]
+        modelo = self.tree.item(self.tree.selection())['values'][1]
+        n_de_serie = self.tree.item(self.tree.selection())['values'][2]
+        fecha_de_compra = self.tree.item(self.tree.selection())['values'][3]
+        ubicación = self.tree.item(self.tree.selection())['values'][4]
         self.edit_wind = Toplevel()
         self.edit_wind.title = 'EDITAR HERRAMIENTA ELÉCTRICA'
 
@@ -265,14 +257,6 @@ class Herramientas:
         Label(self.edit_wind, text = 'Nuevo Nombre:').grid(row =1 , column =1)
         nuevo_nombre = Entry(self.edit_wind)
         nuevo_nombre.grid(row = 1, column = 2)
-
-        #Color
-        Label(self.edit_wind, text = 'Color:').grid(row = 2, column = 1)
-        Entry(self.edit_wind, textvariable = StringVar(self.edit_wind, value = color), state = 'readonly').grid(row = 2, column = 2)
-        #Nuevo_color
-        Label(self.edit_wind, text = 'Nuevo Color:').grid(row =3 , column =1)
-        nuevo_color = Entry(self.edit_wind)
-        nuevo_color.grid(row = 3, column = 2)
 
         #Marca
         Label(self.edit_wind, text = 'Marca:').grid(row = 4, column = 1)
@@ -314,14 +298,12 @@ class Herramientas:
         nueva_ubicación = Entry(self.edit_wind)
         nueva_ubicación.grid(row = 13, column = 2)
 
-        Button(self.edit_wind, text = 'EDITAR', command = lambda: self.editar_registros(nuevo_nombre.get(), nombre, nuevo_color.get(), color, nueva_marca.get(), marca, nuevo_modelo.get(), modelo, nuevo_n_de_serie.get(), n_de_serie, nueva_fecha_de_compra.get(), fecha_de_compra, nueva_ubicación.get(), ubicación, id_registro)).grid(row = 14, column =2, sticky = W)
+        Button(self.edit_wind, text = 'EDITAR', command = lambda: self.editar_registros(nuevo_nombre.get(), nombre, nueva_marca.get(), marca, nuevo_modelo.get(), modelo, nuevo_n_de_serie.get(), n_de_serie, nueva_fecha_de_compra.get(), fecha_de_compra, nueva_ubicación.get(), ubicación, id_registro)).grid(row = 14, column =2, sticky = W)
 
-    def editar_registros(self,nuevo_nombre, nombre, nuevo_color, color, nueva_marca, marca, nuevo_modelo, modelo, nuevo_n_de_serie, n_de_serie, nueva_fecha_de_compra, fecha_de_compra, nueva_ubicación, ubicación, id):
+    def editar_registros(self,nuevo_nombre, nombre, nueva_marca, marca, nuevo_modelo, modelo, nuevo_n_de_serie, n_de_serie, nueva_fecha_de_compra, fecha_de_compra, nueva_ubicación, ubicación, id):
       
         if nuevo_nombre.strip() == "":
             nuevo_nombre = nombre
-        if nuevo_color.strip() == "":
-            nuevo_color = color
         if nueva_marca.strip() == "":
             nueva_marca = marca
         if nuevo_modelo.strip() == "":
@@ -333,15 +315,53 @@ class Herramientas:
         if nueva_ubicación.strip() == "":
             nueva_ubicación = ubicación
 
-        query = 'UPDATE herramientas_electricas SET nombre = ?, color = ?, marca = ?, modelo = ?, n_de_serie = ?, fecha_de_compra = ?, ubicación = ? WHERE id = ? '
-        parameters = (nuevo_nombre, nuevo_color, nueva_marca, nuevo_modelo, nuevo_n_de_serie, nueva_fecha_de_compra, nueva_ubicación, id)
+        query = 'UPDATE herramientas_electricas SET nombre = ?, marca = ?, modelo = ?, n_de_serie = ?, fecha_de_compra = ?, ubicación = ? WHERE id = ? '
+        parameters = (nuevo_nombre, nueva_marca, nuevo_modelo, nuevo_n_de_serie, nueva_fecha_de_compra, nueva_ubicación, id)
         self.run_query(query, parameters)
         self.edit_wind.destroy()
         self.message['text'] = '✅ HERRAMIENTA ELÉCTRICA << {} >> EDITADA CORRECTAMENTE, MI REY!! 👍'.format(nombre)
         self.message['fg'] = 'green'
         self.message['font'] = self.bold_font
         self.get_herramientas_electricas()
+    
+    def on_double_click(self, event):
+        self.message['text'] = ''
+        if not self.tree.selection():
+            return
+        id_registro = self.tree.selection()[0]
+        item = self.tree.item(id_registro)
+        ubicación = item['values'][4]   # columna ubicación
+        self.mostrar_por_ubicación(ubicación)
 
+    def mostrar_por_ubicación(self, ubicación):
+        self.ubic_win = Toplevel()
+        self.ubic_win.title = 'HERRAMIENTAS EN "{}"'.format(ubicación.upper())
+
+        Label(self.ubic_win, text = 'HERRAMIENTAS EN "{}"'.format(ubicación.upper()), font = self.bold_font, fg = "blue").grid(row = 0, column = 0, columnspan = 2, pady = 10)
+        
+        # Label para mostrar cantidad total de herramientas por ubicación
+        self.total_label_ubi = Label(self.ubic_win, text = 'TOTAL: 0', font = self.bold_font, fg = "blue")
+        self.total_label_ubi.grid(row = 1, column = 0, columnspan = 2, pady = 10, sticky = W+E)
+
+        tree_ubic = ttk.Treeview(self.ubic_win, height = 10, columns = ("col1", "col2", "col3", "col4", "col5"))
+        tree_ubic.grid(row = 2, column = 0, columnspan = 2)
+
+        tree_ubic.heading('#0', text = 'nombre', anchor = CENTER)
+        tree_ubic.heading('col1', text = 'marca', anchor = CENTER)
+        tree_ubic.heading('col2', text = 'modelo', anchor = CENTER)
+        tree_ubic.heading('col3', text = 'n_de_serie', anchor = CENTER)
+        tree_ubic.heading('col4', text = 'fecha_de_compra', anchor = CENTER)
+        tree_ubic.heading('col5', text = 'ubicación', anchor = CENTER)
+
+        def normalizar_ubicacion(ubicacion):
+            return ubicacion.strip().upper()
+
+        query = 'SELECT * FROM herramientas_electricas WHERE UPPER(ubicación) = ? ORDER BY nombre collate nocase ASC'
+        db_rows = self.run_query(query, (normalizar_ubicacion(ubicación),))
+        for row in db_rows:
+            tree_ubic.insert('', 'end', iid = row[0], text = row[1], values = (row[2], row[3], row[4], row[5], row[6]))
+        total = len(db_rows)
+        self.total_label_ubi.config(text = "Total: " + str(total))
 
 
 
