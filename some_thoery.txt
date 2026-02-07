@@ -1,0 +1,3 @@
+TKINTER doubleclick
+- Read “Bindings and Events” for the double-click logic.
+- Read “Tkinter Dialogs” (especially messagebox or simpledialog) for creating the pop-up window.
