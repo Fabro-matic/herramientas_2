@@ -3,8 +3,9 @@ from tkinter import *
 import tkinter.font as tkFont
 from tkinter import messagebox
 import sqlite3
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 
-## MAC ## (habilitar db_name = resource_path('color_after_name.db)) 
 import os, sys
 
 def resource_path(relative_path):
@@ -22,12 +23,12 @@ class Herramientas:
 
     def __init__(self, window):
         self.wind =  window
-        self.wind.title('HERRAMIENTAS ELÉCTRICAS')
+        self.wind.title('HERRAMIENTAS')
 
               
 
         #Creating a Frame Container (FRAME)
-        frame = LabelFrame(self.wind, text = 'REGISTRAR NUEVA HERRAMIENTA ELÉCTRICA')
+        frame = LabelFrame(self.wind, text = 'REGISTRAR NUEVA HERRAMIENTA')
         frame.grid(row = 0, column = 0, columnspan = 2, pady = 10)
 
         #Definning a bold font tied to the root
@@ -68,18 +69,18 @@ class Herramientas:
         self.ubicación.grid(row = 7, column = 1)
 
         #Botón Agregar Herramienta
-        ttk.Button(frame, text = 'AGREGAR NUEVA HERRAMIENTA ELÉCTRICA', command = self.agregar_herramientas_electricas).grid(row = 8, columnspan = 2, sticky = W + E)
+        ttk.Button(frame, text = 'AGREGAR NUEVA HERRAMIENTA', command = self.agregar_herramientas_electricas).grid(row = 8, columnspan = 2, sticky = W + E)
 
         #Output Messages
         self.message = Label(text = '', fg = 'green')
         self.message.grid(row = 9, column = 0, columnspan = 2, sticky = W + E)
 
 
-        #Tabla de Herramientas eléctricas con Scrollbar
+        #Tabla de Herramientas con Scrollbar
         
         #Frame contenedor para tabla + scrollbar
         tabla_frame = Frame(self.wind)
-        tabla_frame.grid(row = 10, column = 0, columnspan = 2, sticky = W + E)
+        tabla_frame.grid(row = 11, column = 0, columnspan = 2, sticky = W + E)
 
        
 
@@ -92,7 +93,7 @@ class Herramientas:
         tabla_frame.grid_columnconfigure(0, weight = 1)
         
         #Treeview
-        self.tree = ttk.Treeview(tabla_frame, height = 30, columns = ("col1", "col2", "col3", "col4", "col5"))
+        self.tree = ttk.Treeview(tabla_frame, height = 40, columns = ("col1", "col2", "col3", "col4", "col5"))
         self.tree.grid(row = 0, column = 0, sticky = "nsew")
 
         #Scroll vertical
@@ -129,12 +130,14 @@ class Herramientas:
         botones_frame = Frame(self.wind)
         botones_frame.grid(row=11, column=0, columnspan=2, pady=10, sticky=W+E)
 
+        
         ttk.Button(botones_frame, text='EDITAR', command=self.editar_herramienta_electrica).pack(side=LEFT, expand=True, fill=X)
         ttk.Button(botones_frame, text='BORRAR', command=self.delete_registro).pack(side=LEFT, expand=True, fill=X)
-
+        ttk.Button(botones_frame, text='IMPRIMIR SELECCIÓN', command=self.imprimir_seleccion).pack(side=LEFT, expand=True, fill=X)
+        
         # Label para mostrar cantidad total de herramientas
-        self.total_label = Label(self.wind, text = 'TOTAL HERRAMIENTAS ELÉCTRICAS: 0', font = self.bold_font, fg = "blue")
-        self.total_label.grid(row = 12, column = 0, columnspan = 2, pady = 10, sticky = W+E)
+        self.total_label = Label(self.wind, text = 'TOTAL HERRAMIENTAS: 0', font = self.bold_font, fg = "blue")
+        self.total_label.grid(row = 12 , column = 0, columnspan = 2, pady = 10, sticky = W+E)
 
         #Llenar la tabla
         self.get_herramientas_electricas()
@@ -172,7 +175,7 @@ class Herramientas:
             query = 'INSERT INTO herramientas_electricas VALUES(NULL, ?, ?, ?, ?, ?, ?)'
             parameters = (self.nombre.get(), self.marca.get(), self.modelo.get(), self.ndeserie.get(), self.fechadecompra.get(), self.ubicación.get())
             self.run_query(query, parameters)
-            self.message['text'] = '✅¡HERRAMIENTA ELÉCTRICA << {} >> AGREGADA EXITOSAMENTE, MI REY! 👍'.format(self.nombre.get())
+            self.message['text'] = '✅¡HERRAMIENTA << {} >> AGREGADA EXITOSAMENTE. 👍'.format(self.nombre.get())
             self.message['fg'] = 'green'
             self.message['font'] = self.bold_font
             self.nombre.delete(0, END)
@@ -185,7 +188,7 @@ class Herramientas:
             self.get_herramientas_electricas()
 
         else:           
-            self.message['text'] = 'AMIGO, TENÉS QUE COMPLETAR TODA LA INFO DE ARRIBA PARA AGREGAR. USÁ - - - -  SI NO LA TENÉS ;D'
+            self.message['text'] = 'TENÉS QUE COMPLETAR TODA LA INFO DE ARRIBA PARA AGREGAR. USÁ - - - -  SI NO LA TENÉS ;D'
             self.message['fg'] = 'red'
             self.message['font'] = self.bold_font
             self.get_herramientas_electricas()
@@ -199,7 +202,7 @@ class Herramientas:
         try:
             self.tree.item(self.tree.selection())['text'][0]
         except IndexError as e:
-            self.message['text'] = '❌ PARA BORRAR, SELECCIONÁ UNA HERREMIENTA ELÉCTRICA, AMIGO ❌'
+            self.message['text'] = '❌ PARA BORRAR, SELECCIONE UNA HERREMIENTA ❌'
             self.message['fg'] = 'red'
             self.message['font'] = self.bold_font
             
@@ -220,13 +223,13 @@ class Herramientas:
         if respuesta:
             query = 'DELETE FROM herramientas_electricas WHERE id = ?'
             self.run_query(query, (selected_item, ))
-            self.message['text'] = '✅ ¡HERRAMIENTA ELÉCTRICA << {} >> BORRADA EXITOSAMENTE, MI REY! 👍'.format(nombre)
+            self.message['text'] = '✅ ¡HERRAMIENTA << {} >> BORRADA EXITOSAMENTE 👍'.format(nombre)
             self.message['fg'] = 'green'
             self.message ['font'] = self.bold_font
             self.get_herramientas_electricas()
            
         else:
-            self.message['text'] = 'NO SE BORRÓ LA HERRAMIENTA << {} >>, AMIGO ;D'.format(nombre)
+            self.message['text'] = 'NO SE BORRÓ LA HERRAMIENTA << {} >>'.format(nombre)
             self.message['fg'] = 'blue'
             self.message['font'] = self.bold_font
 
@@ -236,7 +239,7 @@ class Herramientas:
         try:
             self.tree.item(self.tree.selection())['text'][0]
         except IndexError as e:
-            self.message['text'] = '❌ PARA EDITAR, SELECCIONÁ UNA HERREMIENTA ELÉCTRICA, AMIGO ❌'
+            self.message['text'] = '❌ PARA EDITAR, SELECCIONÁ UNA HERREMIENTA. ❌'
             self.message['fg'] = 'red'
             self.message['font'] = self.bold_font
             return
@@ -248,7 +251,7 @@ class Herramientas:
         fecha_de_compra = self.tree.item(self.tree.selection())['values'][3]
         ubicación = self.tree.item(self.tree.selection())['values'][4]
         self.edit_wind = Toplevel()
-        self.edit_wind.title = 'EDITAR HERRAMIENTA ELÉCTRICA'
+        self.edit_wind.title = 'EDITAR HERRAMIENTA'
 
         #Nombre
         Label(self.edit_wind, text = 'Nombre:').grid(row = 0, column = 1)
@@ -319,7 +322,7 @@ class Herramientas:
         parameters = (nuevo_nombre, nueva_marca, nuevo_modelo, nuevo_n_de_serie, nueva_fecha_de_compra, nueva_ubicación, id)
         self.run_query(query, parameters)
         self.edit_wind.destroy()
-        self.message['text'] = '✅ HERRAMIENTA ELÉCTRICA << {} >> EDITADA CORRECTAMENTE, MI REY!! 👍'.format(nombre)
+        self.message['text'] = '✅ HERRAMIENTA << {} >> EDITADA CORRECTAMENTE 👍'.format(nombre)
         self.message['fg'] = 'green'
         self.message['font'] = self.bold_font
         self.get_herramientas_electricas()
@@ -337,11 +340,13 @@ class Herramientas:
         self.ubic_win = Toplevel()
         self.ubic_win.title = 'HERRAMIENTAS EN "{}"'.format(ubicación.upper())
 
+        
         Label(self.ubic_win, text = 'HERRAMIENTAS EN "{}"'.format(ubicación.upper()), font = self.bold_font, fg = "blue").grid(row = 0, column = 0, columnspan = 2, pady = 10)
         
         # Label para mostrar cantidad total de herramientas por ubicación
         self.total_label_ubi = Label(self.ubic_win, text = 'TOTAL: 0', font = self.bold_font, fg = "blue")
         self.total_label_ubi.grid(row = 1, column = 0, columnspan = 2, pady = 10, sticky = W+E)
+        ttk.Button(self.ubic_win, text="IMPRIMIR TODO", command=lambda: self.imprimir_registros(tree_ubic, "HERRAMIENTAS EN {}".format(ubicación.upper()))).grid(row=3, column=0, pady=10, sticky=W+E)
 
         tree_ubic = ttk.Treeview(self.ubic_win, height = 10, columns = ("col1", "col2", "col3", "col4", "col5"))
         tree_ubic.grid(row = 2, column = 0, columnspan = 2)
@@ -353,15 +358,86 @@ class Herramientas:
         tree_ubic.heading('col4', text = 'fecha_de_compra', anchor = CENTER)
         tree_ubic.heading('col5', text = 'ubicación', anchor = CENTER)
 
-        def normalizar_ubicacion(ubicacion):
-            return ubicacion.strip().upper()
+        def normalizar_ubicación(ubicación):
+            return ubicación.strip().upper()
 
         query = 'SELECT * FROM herramientas_electricas WHERE UPPER(ubicación) = ? ORDER BY nombre collate nocase ASC'
-        db_rows = self.run_query(query, (normalizar_ubicacion(ubicación),))
+        db_rows = self.run_query(query, (normalizar_ubicación(ubicación),))
         for row in db_rows:
             tree_ubic.insert('', 'end', iid = row[0], text = row[1], values = (row[2], row[3], row[4], row[5], row[6]))
         total = len(db_rows)
         self.total_label_ubi.config(text = "Total: " + str(total))
+
+
+
+    def imprimir_registros(self, tree, titulo):
+        registros = tree.get_children()
+        if not registros:
+            messagebox.showwarning("Imprimir", "No hay registros para imprimir.")
+            return
+
+        archivo = "herramientas.pdf"
+        c = canvas.Canvas(archivo, pagesize=letter)
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(50, 780, titulo)
+        c.setFont("Helvetica", 10)
+
+        encabezados = ["Nombre", "Marca", "Modelo", "N° Serie", "Fecha Compra", "Ubicación", "✔"]
+        x = [50, 150, 250, 350, 450, 550, 640]
+        for i in range(len(encabezados)):
+            c.drawString(x[i], 750, encabezados[i])
+
+        c.line(40, 745, 700, 745)
+
+        y = 730
+        for item in registros:
+            nombre = tree.item(item, "text")
+            valores = self.tree.item(item, "values") if tree == self.tree else tree.item(item, "values")
+            fila = [nombre] + list(valores)
+
+            for i in range(len(fila)):
+                c.drawString(x[i], y, str(fila[i]))
+
+            c.rect(x[6], y - 2, 10, 10)
+            c.line(40, y - 5, 700, y - 5)
+            y = y - 20
+
+        for pos in x:
+            c.line(pos - 5, 745, pos - 5, y + 15)
+
+        c.save()
+
+        try:
+            if sys.platform.startswith("win"):
+                os.startfile(archivo, "print")
+            else:
+                subprocess.run(["lp", archivo])
+            messagebox.showinfo("Imprimir", "✅ Registros enviados a la impresora.")
+        except Exception as e:
+            messagebox.showerror("Error", "❌ Error al imprimir: {} ❌".format(e))
+
+
+    def imprimir_seleccion(self):
+        seleccion = self.tree.selection()
+        if not seleccion:
+            self.message['text'] = '❌ PARA IMPRIMIR, SELECCIONE UNA O MÁS HERRAMIENTAS. ❌'
+            self.message['fg'] = 'red'
+            self.message['font'] = self.bold_font
+            return
+
+        temp_tree = ttk.Treeview()
+        for item in seleccion:
+            nombre = self.tree.item(item, "text")
+            valores = self.tree.item(item, "values")
+            temp_tree.insert("", "end", text=nombre, values=valores)
+
+        self.imprimir_registros(temp_tree, "HERRAMIENTAS SELECCIONADAS")
+
+
+
+
+
+
 
 
 

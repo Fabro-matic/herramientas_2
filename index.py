@@ -73,7 +73,7 @@ class Herramientas:
 
 
         #Treeview
-        self.tree = ttk.Treeview(tabla_frame, height = 30, columns = ("col1", "col2", "col3", "col4", "col5"))
+        self.tree = ttk.Treeview(tabla_frame, height = 15, columns = ("col1", "col2", "col3", "col4", "col5"))
         self.tree.grid(row = 0, column = 0, sticky = "nsew")
 
         #Scroll vertical
@@ -94,16 +94,24 @@ class Herramientas:
         self.tree.heading('col4', text = 'Fecha de compra', anchor = CENTER)
         self.tree.heading('col5', text = 'ubicación', anchor = CENTER)
 
+        #Ajustar ancho de columnas para que no se desborden
+        self.tree.column('#0', width = 150, stretch=False)
+        self.tree.column('col1', width = 100, stretch=False)
+        self.tree.column('col2', width = 120, stretch=False)
+        self.tree.column('col3', width = 120, stretch=False)
+        self.tree.column('col4', width = 150, stretch=False)
+        self.tree.column('col5', width = 120, stretch=False)
+
         # Evento doble clic en fila
         self.tree.bind("<Double-1>", self.on_double_click)
 
         #Botones de EDITAR Y BORRAR registros
-        ttk.Button(text = 'EDITAR', command = self.editar_herramienta_electrica).grid(row = 11, column = 0, sticky = W + E)
-        ttk.Button(text = 'BORRAR', command = self.delete_registro).grid(row = 11, column = 1, sticky = W + E)
+        ttk.Button(text = 'EDITAR', command = self.editar_herramienta_electrica).grid(row = 10, column = 0, sticky = W + E)
+        ttk.Button(text = 'BORRAR', command = self.delete_registro).grid(row = 10, column = 1, sticky = W + E)
 
         #Label TOTAL HERRAMIENTAS ELÉCTRICAS, esquina superior izquierda, para q se vea bien.
         self.total_label = Label(self.wind, text='TOTAL HERRAMIENTAS ELÉCTRICAS: 0', font=self.bold_font, fg="blue")
-        self.total_label.grid(row=0, column=0, sticky=W, padx=10, pady=10)
+        self.total_label.grid(row=11, column=0, sticky=W, padx=10, pady=10)
 
 
         #Llenar la tabla
