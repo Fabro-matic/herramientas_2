@@ -3,7 +3,7 @@ from tkinter import *
 import tkinter.font as tkFont
 from tkinter import messagebox
 import sqlite3
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 import os, sys
@@ -377,7 +377,7 @@ class Herramientas:
             return
 
         archivo = "herramientas.pdf"
-        c = canvas.Canvas(archivo, pagesize=letter)
+        c = canvas.Canvas(archivo, pagesize=A4)
         c.setFont("Helvetica-Bold", 12)
         c.drawString(50, 780, titulo)
         c.setFont("Helvetica", 10)
