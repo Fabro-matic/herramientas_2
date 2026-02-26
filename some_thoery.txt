@@ -1,3 +1,13 @@
 TKINTER doubleclick
 - Read “Bindings and Events” for the double-click logic.
 - Read “Tkinter Dialogs” (especially messagebox or simpledialog) for creating the pop-up window.
+
+REPORTLAB MY GURÚ'S GUIDELINES:
+    a_ ¿Cómo se genera el pdf?
+    b_ ¿Cómo REPORTLAB administra la info para gestionar el pdf?
+    c_ ¿Pregunta b es una tabla?
+    d_ ¿Qué hace REPORTLAB para generar la tabla?
+    e_ ¿Cómo hacer para que en las columnas escriba hacia abajo y no todo al costado?
+
+
+

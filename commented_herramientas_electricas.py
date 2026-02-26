@@ -373,23 +373,31 @@ class Herramientas:
     def imprimir_registros(self, tree, titulo):
         registros = tree.get_children()
         if not registros:
-            messagebox.showwarning("Imprimir", "No hay registros para imprimir.")
+            messagebox.showwarning("Imprimir", "SELECCIONE UNO O MÁS HERRAMIENTAS PARA IMPRIMIR.")
             return
 
         archivo = "herramientas.pdf"
         c = canvas.Canvas(archivo, pagesize=A4)
+        width, height = A4
+
+        # Título
         c.setFont("Helvetica-Bold", 12)
-        c.drawString(50, 780, titulo)
+        c.drawString(50, height - 50, titulo)
         c.setFont("Helvetica", 10)
 
+        # Encabezados
         encabezados = ["Nombre", "Marca", "Modelo", "N° Serie", "Fecha Compra", "Ubicación", "✔"]
-        x = [50, 150, 250, 350, 450, 550, 640]
+        x = [40, 120, 200, 280, 360, 440, 520]  # coordenadas ajustadas para A4
+        y_inicio = height - 80
+
         for i in range(len(encabezados)):
-            c.drawString(x[i], 750, encabezados[i])
+            c.drawString(x[i], y_inicio, encabezados[i])
 
-        c.line(40, 745, 700, 745)
+        # Línea debajo de encabezados
+        c.line(30, y_inicio - 5, width - 30, y_inicio - 5)
 
-        y = 730
+        # Filas
+        y = y_inicio - 20
         for item in registros:
             nombre = tree.item(item, "text")
             valores = self.tree.item(item, "values") if tree == self.tree else tree.item(item, "values")
@@ -398,12 +406,17 @@ class Herramientas:
             for i in range(len(fila)):
                 c.drawString(x[i], y, str(fila[i]))
 
-            c.rect(x[6], y - 2, 10, 10)
-            c.line(40, y - 5, 700, y - 5)
+            # Casilla de verificación
+            c.rect(x[6], y - 2, 12, 12)
+
+            # Línea horizontal de la fila
+            c.line(30, y - 5, width - 30, y - 5)
+
             y = y - 20
 
+        # Bordes verticales
         for pos in x:
-            c.line(pos - 5, 745, pos - 5, y + 15)
+            c.line(pos - 5, y_inicio + 5, pos - 5, y + 15)
 
         c.save()
 
