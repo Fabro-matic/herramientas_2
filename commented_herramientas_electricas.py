@@ -3,8 +3,13 @@ from tkinter import *
 import tkinter.font as tkFont
 from tkinter import messagebox
 import sqlite3
+
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
+from reportlab.lib.units import mm
 
 import os, sys
 
@@ -340,14 +345,14 @@ class Herramientas:
         self.ubic_win = Toplevel()
         self.ubic_win.title = 'HERRAMIENTAS EN "{}"'.format(ubicación.upper())
 
-        
-        Label(self.ubic_win, text = 'HERRAMIENTAS EN "{}"'.format(ubicación.upper()), font = self.bold_font, fg = "blue").grid(row = 0, column = 0, columnspan = 2, pady = 10)
-        
+        Label(self.ubic_win, text = 'HERRAMIENTAS EN "{}"'.format(ubicación.upper()), 
+            font = self.bold_font, fg = "blue").grid(row = 0, column = 0, columnspan = 2, pady = 10)
+
         # Label para mostrar cantidad total de herramientas por ubicación
         self.total_label_ubi = Label(self.ubic_win, text = 'TOTAL: 0', font = self.bold_font, fg = "blue")
         self.total_label_ubi.grid(row = 1, column = 0, columnspan = 2, pady = 10, sticky = W+E)
-        ttk.Button(self.ubic_win, text="IMPRIMIR TODO", command=lambda: self.imprimir_registros(tree_ubic, "HERRAMIENTAS EN {}".format(ubicación.upper()))).grid(row=3, column=0, pady=10, sticky=W+E)
 
+        # Tabla Treeview
         tree_ubic = ttk.Treeview(self.ubic_win, height = 10, columns = ("col1", "col2", "col3", "col4", "col5"))
         tree_ubic.grid(row = 2, column = 0, columnspan = 2)
 
@@ -358,6 +363,11 @@ class Herramientas:
         tree_ubic.heading('col4', text = 'fecha_de_compra', anchor = CENTER)
         tree_ubic.heading('col5', text = 'ubicación', anchor = CENTER)
 
+        # Botón de imprimir usando Platypus
+        ttk.Button(self.ubic_win, text="IMPRIMIR TODO", 
+                command=lambda: self.imprimir_registros(tree_ubic, "HERRAMIENTAS EN {}".format(ubicación.upper()))
+                ).grid(row=3, column=0, pady=10, sticky=W+E)
+
         def normalizar_ubicación(ubicación):
             return ubicación.strip().upper()
 
@@ -365,10 +375,9 @@ class Herramientas:
         db_rows = self.run_query(query, (normalizar_ubicación(ubicación),))
         for row in db_rows:
             tree_ubic.insert('', 'end', iid = row[0], text = row[1], values = (row[2], row[3], row[4], row[5], row[6]))
+
         total = len(db_rows)
         self.total_label_ubi.config(text = "Total: " + str(total))
-
-
 
     def imprimir_registros(self, tree, titulo):
         registros = tree.get_children()
@@ -377,58 +386,76 @@ class Herramientas:
             return
 
         archivo = "herramientas.pdf"
-        c = canvas.Canvas(archivo, pagesize=A4)
-        width, height = A4
+        doc = SimpleDocTemplate(
+            archivo,
+            pagesize=A4,
+            leftMargin=20*mm,
+            rightMargin=20*mm,
+            topMargin=20*mm,
+            bottomMargin=20*mm
+        )
+
+        styles = getSampleStyleSheet()
+        styleN = styles["Normal"]
+        styleN.fontSize = 12
+        styleN.wordWrap = 'CJK'
+        story = []
 
         # Título
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(50, height - 50, titulo)
-        c.setFont("Helvetica", 10)
+        story.append(Paragraph(titulo, styles['Title']))
+        story.append(Spacer(1, 12))
 
         # Encabezados
         encabezados = ["Nombre", "Marca", "Modelo", "N° Serie", "Fecha Compra", "Ubicación", "✔"]
-        x = [40, 120, 200, 280, 360, 440, 520]  # coordenadas ajustadas para A4
-        y_inicio = height - 80
-
-        for i in range(len(encabezados)):
-            c.drawString(x[i], y_inicio, encabezados[i])
-
-        # Línea debajo de encabezados
-        c.line(30, y_inicio - 5, width - 30, y_inicio - 5)
 
         # Filas
-        y = y_inicio - 20
+        data = [encabezados]
         for item in registros:
             nombre = tree.item(item, "text")
-            valores = self.tree.item(item, "values") if tree == self.tree else tree.item(item, "values")
-            fila = [nombre] + list(valores)
+            valores = tree.item(item, "values")
+            fila = [Paragraph(nombre, styleN)] + list(valores)
+            data.append(fila)
 
-            for i in range(len(fila)):
-                c.drawString(x[i], y, str(fila[i]))
+        # Tabla
+        table = Table(data, repeatRows=1)
 
-            # Casilla de verificación
-            c.rect(x[6], y - 2, 12, 12)
+        # Estilo
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.black),
+            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0,0), (-1,-1), 12),
+            ('BOTTOMPADDING', (0,0), (-1,0), 12),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+            ('WORDWRAP', (0,0), (0,-1), 'CJK'),
+        ]))
 
-            # Línea horizontal de la fila
-            c.line(30, y - 5, width - 30, y - 5)
+        story.append(table)
 
-            y = y - 20
+        # Generar PDF
+        doc.build(story)
 
-        # Bordes verticales
-        for pos in x:
-            c.line(pos - 5, y_inicio + 5, pos - 5, y + 15)
-
-        c.save()
-
+        # Enviar a impresora con Adobe Reader
         try:
             if sys.platform.startswith("win"):
-                os.startfile(archivo, "print")
+                import win32api, win32print
+                printer_name = win32print.GetDefaultPrinter()
+                acrobat = r"C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe"
+                win32api.ShellExecute(
+                    0,
+                    "open",
+                    acrobat,
+                    f'/t "{archivo}" "{printer_name}"',
+                    ".",
+                    0
+                )
             else:
                 subprocess.run(["lp", archivo])
             messagebox.showinfo("Imprimir", "✅ Registros enviados a la impresora.")
         except Exception as e:
             messagebox.showerror("Error", "❌ Error al imprimir: {} ❌".format(e))
-
+    
 
     def imprimir_seleccion(self):
         seleccion = self.tree.selection()
